@@ -1,4 +1,4 @@
-from flask import Flask # imported it into your file
+from flask import Flask, request, jsonify # imported it into your file
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 import os
@@ -41,6 +41,50 @@ class GuideSchema(ma.Schema):
             
 guide_schema = GuideSchema()  #if have to query for one guide then i would use this 
 guides_schema = GuideSchema(many=True) # if i have to query many guides then this 
+#creating the api through an endpoint so that you can create a guide
+# if you wanna create a new guide then in postman you put in /guide and youll be able to post with the https POST 
+@app.route('/guide', methods=["POST"])
+def add_guide():
+    title = request.json['title']
+    content = request.json['content']
+    
+    new_guide = Guide(title, content)  # instatiating a new guide in the new_guide variable 
+    
+    db.session.add(new_guide) # adding the log of the user logs into the server and logs out 
+    db.session.commit() #opens a session and commited the data
+    #create a variable to help query that table and get the new guide. id 
+    guide = Guide.query.get(new_guide.id)
+    # returns the guide schema on line 28 and returns it in json of the guide variable we just created
+    return guide_schema.jsonify(guide)
+
+# endpoint to query all guides
+
+@app.route("/guides", methods=["GET"]) # get is the default value for methods
+def get_guides():
+    all_guides = Guide.query.all() # gets all the guides in the app
+    result = guides_schema.dump(all_guides)
+    return jsonify(result) # in earlier versions of flask you have to return jsonify(result.data), but they ahve updated that recently 
+
+#endpoint for querying a single guide , gotta tell the guide which one to bring back 
+@app.route("/guide/<id>", methods=["GET"])
+def get_guide(id): # gets the guide by id and tells flask to look for <id>  and pull that all into the function
+    # and in the function it grabs the gquery by id  and its called a slug aka url parameter and gets it and runs the guide schema and jsonifys it
+    guide = Guide.query.get(id)
+    return guide_schema.jsonify(guide)
+
+#endpoint building a update action request in flask using the PUT request
+@app.route("/guide/<id>", methods=["PUT"]) # same as the function above, but the methods Put means your gonna update it 
+def guide_update(id):
+    guide = Guide.query.get(id)
+    title = request.json['title']
+    content = request.json['content']
+    #overriding the title and contents data
+    guide.title = title
+    guide.content = content
+    #starting a new database session
+    db.session.commit()
+    
+    return guide_schema.jsonify(guide)
 
 
 
