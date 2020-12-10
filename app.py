@@ -38,7 +38,7 @@ class Guide(db.Model):
 class GuideSchema(ma.Schema):
     class Meta:
         fields = ('title', 'content')
-            
+   # after you create these go into  your shell and type py and from app import db          
 guide_schema = GuideSchema()  #if have to query for one guide then i would use this 
 guides_schema = GuideSchema(many=True) # if i have to query many guides then this 
 #creating the api through an endpoint so that you can create a guide
@@ -85,6 +85,14 @@ def guide_update(id):
     db.session.commit()
     
     return guide_schema.jsonify(guide)
+#endpoint for deleting  records in the database
+@app.route("/guide/<id>", methods=["DELETE"])
+def guide_delete(id):
+    guide = Guide.query.get(id)
+    db.session.delete(guide)
+    db.session.commit()
+    # return guide_schema.jsonify(guide) this isnt reality you would just say and return a string to get back 
+    return "The guide was succesfully deleted"
 
 
 
